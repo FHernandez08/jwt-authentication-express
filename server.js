@@ -17,6 +17,7 @@ mongoose.connect('mongodb://localhost:27017/userdetails', {
 .catch((err) => console.log('Error connecting to MongoDB', err));
 
 // Routes
+//      Existing user logging in
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
@@ -41,6 +42,34 @@ app.post('/login', async (req, res) => {
         res.status(500).send('Server error!');
     }
 });
+
+//      Registering users
+app.post('/register', async (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).send('Email and password are required!');
+    }
+
+    try {
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(409).send('User already exists!');
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const newUser = new User({ email, password: hashedPassword });
+        await newUser.save();
+
+        res.status(201).send('User registered successfully!');
+    }
+    
+    catch (error) {
+        console.log(error);
+        res.status(500).send('Server error!');
+    }
+})
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
