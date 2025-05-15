@@ -3,6 +3,8 @@ const app = express();
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('./models/user');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 const PORT = process.env.PORT || 5000;
 
@@ -17,7 +19,7 @@ mongoose.connect('mongodb://localhost:27017/userdetails', {
 .catch((err) => console.log('Error connecting to MongoDB', err));
 
 // Routes
-//      Existing user logging in
+// -- Existing user logging in --
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
@@ -35,7 +37,14 @@ app.post('/login', async (req, res) => {
         if (!isMatch) {
             return res.status(401).send('Invalid credentials!');
         }
-        res.status(200).send('Login successful!');
+
+        const payload = { email: user.email };
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+
+        res.status(200).json({
+            message: 'Login Successful!',
+            data: token
+        });
     }
     catch (error) {
         console.error(error);
@@ -43,7 +52,7 @@ app.post('/login', async (req, res) => {
     }
 });
 
-//      Registering users
+// -- Registering users --
 app.post('/register', async (req, res) => {
     const { email, password } = req.body;
 
