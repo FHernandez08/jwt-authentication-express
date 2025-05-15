@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const User = require('./models/user');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+const { authMiddleware } = require('./middleware/authMiddleware');
 
 const PORT = process.env.PORT || 5000;
 
@@ -79,6 +80,14 @@ app.post('/register', async (req, res) => {
         res.status(500).send('Server error!');
     }
 })
+
+// -- Protected Route --
+app.get('/protected', authMiddleware, (req, res) => {
+    res.status(200).json({
+        message: 'Access granted to protected route',
+        user: req.user
+    });
+});
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
